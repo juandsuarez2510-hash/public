@@ -1,0 +1,19 @@
+:root{--navy:#0a1730;--navy2:#12264d;--slate:#64748b;--gold:#d4af37;--green:#10b981;--red:#f43f5e}
+*{box-sizing:border-box;margin:0}
+body{font-family:Inter,system-ui,sans-serif;color:#fff;min-height:100vh;display:flex;flex-direction:column;align-items:center;gap:16px;padding:20px;
+background:radial-gradient(circle at 85% 0,rgba(212,175,55,.16),transparent 45%),linear-gradient(rgba(255,255,255,.035) 1px,transparent 1px) 0 0/44px 44px,linear-gradient(90deg,rgba(255,255,255,.035) 1px,transparent 1px) 0 0/44px 44px,linear-gradient(160deg,var(--navy),var(--navy2))}
+.card{background:rgba(255,255,255,.06);border:1px solid rgba(212,175,55,.3);border-radius:18px;padding:24px;width:100%;max-width:900px;backdrop-filter:blur(6px)}
+.gold{color:var(--gold)}.ok{color:var(--green)}.no{color:var(--red)}.center{text-align:center}.hidden{display:none!important}
+input,select,textarea{width:100%;padding:14px;border-radius:12px;border:1px solid #334155;background:#0b1d3d;color:#fff;font:inherit;font-size:1.1rem;margin:6px 0}
+button{cursor:pointer;border:0;border-radius:12px;padding:14px 22px;font:inherit;font-weight:600;background:var(--gold);color:var(--navy);transition:transform .1s,filter .2s}
+button:active{transform:scale(.95);filter:brightness(1.2)}button:disabled{opacity:.4}
+.row{display:flex;gap:10px;align-items:center;margin:6px 0}
+.big{display:flex;gap:14px;width:100%;max-width:900px;min-height:50vh}
+.big button{flex:1;font-size:clamp(1.6rem,7vw,3rem);color:#fff;border-radius:22px}
+.big .t{background:var(--green)}.big .f{background:var(--red)}
+.pin{font-size:clamp(3rem,13vw,7rem);letter-spacing:.12em;color:var(--gold);font-weight:800}
+.timer{font-size:3rem;font-weight:800;color:var(--gold)}
+.q{font-size:clamp(1.4rem,4vw,2.6rem);font-weight:600;margin:16px 0}
+.bar{height:48px;border-radius:10px;margin:8px 0;min-width:48px;transition:width .7s;display:flex;align-items:center;padding-left:14px;font-weight:700}
+.chip{display:inline-block;background:var(--navy2);border:1px solid var(--slate);border-radius:20px;padding:6px 14px;margin:4px}
+.lb div{display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid rgba(255,255,255,.1)}

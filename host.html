@@ -1,0 +1,39 @@
+<!DOCTYPE html><html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Anfitrión · Business Trivia</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet"><link rel="stylesheet" href="style.css"></head><body>
+<section id="setup" class="card"><h1>Business <span class="gold">Trivia</span> · Anfitrión</h1>
+<label>Tiempo por pregunta (segundos)</label><input id="time" type="number" min="3" max="120" value="15" list="tp"><datalist id="tp"><option value="5"><option value="10"><option value="15"><option value="30"></datalist>
+<h3 style="margin-top:14px">Preguntas</h3><div id="qs"></div>
+<textarea id="qt" rows="2" placeholder="Escribe una afirmación..."></textarea>
+<div class="row"><select id="qa"><option value="true">Verdadero</option><option value="false">Falso</option></select><button id="add">Agregar</button></div>
+<button id="create" style="width:100%;margin-top:10px">Crear sala</button></section>
+<section id="lobby" class="card center hidden"><p>Únete desde tu celular en</p><h2 id="url" class="gold"></h2><p>PIN de juego</p><div class="pin" id="pin"></div>
+<h2><span id="cnt">0</span> jugadores</h2><div id="chips"></div><button id="start" style="margin-top:16px" disabled>Iniciar juego</button></section>
+<section id="game" class="card center hidden"><div class="row" style="justify-content:space-between"><span id="num"></span><span class="timer" id="timer"></span><span id="vc"></span></div><div class="q" id="qtext"></div></section>
+<section id="res" class="card hidden"><h2 class="center">Respuesta correcta: <span id="ans"></span></h2>
+<div class="bar" id="bt" style="background:var(--green)"></div><div class="bar" id="bf" style="background:var(--red)"></div><p id="bn" class="center"></p>
+<h3 class="gold">Top 5</h3><div class="lb" id="lb"></div><button id="next" style="width:100%;margin-top:14px">Siguiente</button></section>
+<section id="end" class="card hidden"><h1 class="center gold">🏆 Podio final</h1><div class="lb" id="fl"></div></section>
+<script src="/socket.io/socket.io.js"></script><script>
+const $=i=>document.getElementById(i);
+const s=window.io?io():{on(){},emit(){alert('Sin conexión al servidor. Ejecuta "npm start" y abre http://localhost:3000/'+location.pathname.slice(1)+' (no abras el archivo con doble clic ni con Live Server).')}};
+if(!window.io)document.title='⚠ Servidor no conectado';
+const esc=x=>x.replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+let qs=[{t:'El ROI mide el retorno de una inversión respecto a su costo.',a:true},{t:'Flujo de caja positivo siempre significa que la empresa es rentable.',a:false},{t:'El balance general muestra activos, pasivos y patrimonio.',a:true}],iv,last=false;
+const show=id=>['setup','lobby','game','res','end'].forEach(x=>$(x).classList.toggle('hidden',x!=id));
+const lb=a=>a.map((p,i)=>`<div><span>${i+1}. ${esc(p.name)}</span><b class="gold">${p.score}</b></div>`).join('');
+function draw(){$('qs').innerHTML=qs.map((q,i)=>`<div class="row"><span style="flex:1">${i+1}. ${esc(q.t)} <b class="${q.a?'ok':'no'}">${q.a?'V':'F'}</b></span><button data-e="${i}">✎</button><button data-d="${i}">✕</button></div>`).join('')}
+$('qs').onclick=e=>{const b=e.target.dataset;if(b.d)qs.splice(b.d,1);if(b.e){const t=prompt('Editar enunciado',qs[b.e].t);if(t)qs[b.e].t=t;qs[b.e].a=confirm('¿Es VERDADERO? (Cancelar = Falso)')}draw()};
+$('add').onclick=()=>{const t=$('qt').value.trim();if(t){qs.push({t,a:$('qa').value=='true'});$('qt').value='';draw()}};
+$('create').onclick=()=>s.emit('host:create',{questions:qs,time:+$('time').value},d=>{if(d.error)return alert(d.error);$('pin').textContent=d.pin;$('url').textContent=location.host+'/player.html';show('lobby')});
+$('start').onclick=()=>s.emit('host:start');$('next').onclick=()=>s.emit('host:next');
+s.on('players',n=>{$('cnt').textContent=n.length;$('chips').innerHTML=n.map(x=>`<span class="chip">${esc(x)}</span>`).join('');$('start').disabled=!n.length});
+s.on('question',d=>{show('game');$('num').textContent=`Pregunta ${d.n}/${d.total}`;$('qtext').textContent=d.text;$('vc').textContent='Votos: 0';
+ clearInterval(iv);const e=Date.now()+d.time*1000;iv=setInterval(()=>{const r=Math.max(0,Math.ceil((e-Date.now())/1000));$('timer').textContent=r;if(!r)clearInterval(iv)},200)});
+s.on('votes',n=>$('vc').textContent='Votos: '+n);
+s.on('results',d=>{clearInterval(iv);show('res');const tot=Math.max(1,d.t+d.f);
+ $('ans').innerHTML=d.correct?'<span class="ok">VERDADERO</span>':'<span class="no">FALSO</span>';
+ $('bt').style.width=Math.max(8,d.t/tot*100)+'%';$('bt').textContent='Verdadero · '+d.t;$('bf').style.width=Math.max(8,d.f/tot*100)+'%';$('bf').textContent='Falso · '+d.f;
+ $('bn').textContent=d.none?d.none+' sin responder':'';$('lb').innerHTML=lb(d.board);$('next').textContent=d.last?'Ver podio final':'Siguiente'});
+s.on('end',b=>{show('end');$('fl').innerHTML=lb(b)});
+s.on('closed',()=>location.reload());draw();
+</script></body></html>

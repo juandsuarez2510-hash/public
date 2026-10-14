@@ -1,0 +1,28 @@
+<!DOCTYPE html><html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1"><title>Business Trivia</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet"><link rel="stylesheet" href="style.css"></head><body>
+<section id="join" class="card center"><h1>Business <span class="gold">Trivia</span></h1>
+<input id="pin" inputmode="numeric" maxlength="6" placeholder="PIN de juego"><input id="name" maxlength="20" placeholder="Tu nombre"><p id="err" class="no"></p><button id="go" style="width:100%">Unirme</button></section>
+<section id="wait" class="card center hidden"><h2>¡Dentro! ✅</h2><p id="wmsg">Esperando a que el anfitrión inicie...</p></section>
+<section id="vote" class="hidden" style="width:100%;max-width:900px;display:flex;flex-direction:column;gap:12px;flex:1">
+<div class="card center"><div class="row" style="justify-content:space-between"><span id="num"></span><span class="timer" id="timer"></span></div><div class="q" id="qtext"></div></div>
+<div class="big"><button class="t" id="bt">VERDADERO</button><button class="f" id="bf">FALSO</button></div></section>
+<section id="locked" class="card center hidden"><h2>Respuesta enviada 🔒</h2><p>Esperando resultados...</p></section>
+<section id="result" class="card center hidden"><h1 id="rt"></h1><p id="rg"></p><h2>Puntos: <span class="gold" id="sc"></span></h2><p id="rk"></p></section>
+<script src="/socket.io/socket.io.js"></script><script>
+const $=i=>document.getElementById(i);
+const s=window.io?io():{on(){},emit(){alert('Sin conexión al servidor. Ejecuta "npm start" y abre http://localhost:3000/'+location.pathname.slice(1)+' (no abras el archivo con doble clic ni con Live Server).')}};
+if(!window.io)document.title='⚠ Servidor no conectado';
+const show=id=>['join','wait','vote','locked','result'].forEach(x=>$(x).classList.toggle('hidden',x!=id));
+let iv,voted=false;
+$('go').onclick=()=>s.emit('player:join',{pin:$('pin').value.trim(),name:$('name').value},d=>d.error?$('err').textContent=d.error:show('wait'));
+function vote(a){if(voted)return;voted=true;navigator.vibrate&&navigator.vibrate(40);s.emit('player:vote',a);show('locked')}
+$('bt').onclick=()=>vote(true);$('bf').onclick=()=>vote(false);
+s.on('question',d=>{voted=false;show('vote');$('num').textContent=`${d.n}/${d.total}`;$('qtext').textContent=d.text;
+ clearInterval(iv);const e=Date.now()+d.time*1000;iv=setInterval(()=>{const r=Math.max(0,Math.ceil((e-Date.now())/1000));$('timer').textContent=r;if(!r)clearInterval(iv)},200)});
+s.on('result',d=>{clearInterval(iv);show('result');document.body.style.background=d.correct?'#064e3b':'#7f1d1d';
+ $('rt').textContent=!d.answered?'⏱ Sin respuesta':d.correct?'✅ ¡Correcto!':'❌ Incorrecto';$('rg').textContent=d.gained?'+'+d.gained+' pts':'';
+ $('sc').textContent=d.score;$('rk').textContent='Posición #'+d.rank;navigator.vibrate&&navigator.vibrate(d.correct?[60]:[40,40,40])});
+s.on('question',()=>document.body.style.background='');
+s.on('end',d=>{show('result');document.body.style.background='';$('rt').textContent='🏆 Fin del juego';$('rg').textContent='';$('sc').textContent=d.score;$('rk').textContent='Terminaste en el puesto #'+d.rank});
+s.on('closed',()=>location.reload());
+</script></body></html>
